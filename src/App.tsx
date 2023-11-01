@@ -14,7 +14,7 @@ function App() {
   const [squares, setSquares] = useGetSquaresArr({ isSquaresVisible });
   const [squaresContainerRef, { width }] = useMeasure();
 
-  const transition = useTransition(squares, {
+  const transition = useTransition(squares ?? [], {
     from: { y: "-100%", opacity: 0, height: 0, width: 0, marginTop: 0 },
     enter: { y: "0%", opacity: 1, height: SQUARE_HEIGHT, width, marginTop: 4 },
     leave: { y: "-100%", opacity: 0, height: 0, width: 0, marginTop: 0 },
@@ -28,24 +28,21 @@ function App() {
 
   function addSquare() {
     if (!setSquares) return;
-    setSquares((prev) => {
-      const lastFromPrev = prev[prev.length - 1];
-      return [...prev, lastFromPrev + 1];
-    });
+    setSquares((prev) => [...prev, Math.random()]);
   }
 
   return (
     <main className="min-h-screen touch-none flex items-center flex-col gap-2">
       <Btn onClick={toggleSquares}>Toggle</Btn>
-      <DynamicHeight show={!!squares.length}>
+      <DynamicHeight show={!!squares}>
         <Btn onClick={addSquare}>Add square</Btn>
       </DynamicHeight>
       <div
         className="min-h-[100px] w-full relative max-w-[100px]"
         ref={squaresContainerRef}
       >
-        {transition((style) => {
-          return <Square style={{ ...style }} {...{ toggleSquares }} />;
+        {transition((style, _, __, index) => {
+          return <Square {...{ style, setSquares, index }} />;
         })}
         hello
       </div>

@@ -1,19 +1,15 @@
-import {
-  AnimatedProps,
-  animated,
-  easings,
-  useSpring,
-  useSpringRef,
-} from "@react-spring/web";
+import { animated, easings, useSpring, useSpringRef } from "@react-spring/web";
 import { CSSProperties, useEffect } from "react";
 import cn from "./utils/cn";
+import { SetState } from "./types";
 
 interface TProps {
+  setSquares: SetState<number[]> | null;
   style: CSSProperties;
-  toggleSquares: () => void;
+  index: number;
 }
 
-function Square({ style, toggleSquares }: AnimatedProps<TProps>) {
+function Square({ style, setSquares, index }: TProps) {
   const api = useSpringRef();
   const spring = useSpring({
     ref: api,
@@ -32,10 +28,14 @@ function Square({ style, toggleSquares }: AnimatedProps<TProps>) {
     };
   }, [api, spring]);
 
+  function removeThisSquare() {
+    if (!setSquares) return;
+    setSquares((prev) => prev.filter((_, i) => i !== index));
+  }
+
   return (
-    <animated.div className="m-auto" style={style}>
+    <animated.div onClick={removeThisSquare} className="m-auto" style={style}>
       <animated.div
-        onClick={toggleSquares}
         className={cn(
           "rounded m-auto w-full h-full bg-green-700 cursor-zoom-out"
         )}
