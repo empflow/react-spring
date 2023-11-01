@@ -1,9 +1,9 @@
 import { UseSpringProps, animated, useSpring } from "@react-spring/web";
-import { ReactNode } from "react";
+import { HTMLAttributes, ReactNode } from "react";
 import useMeasure from "react-use-measure";
 
-interface TProps {
-  show: boolean;
+interface TProps extends HTMLAttributes<HTMLDivElement> {
+  isOpen: boolean;
   children: ReactNode;
   springProps?: UseSpringProps;
 }
@@ -15,20 +15,23 @@ const defaultSpringProps: UseSpringProps = {
 };
 
 export default function DynamicHeight({
-  show,
+  isOpen,
   children,
   springProps = defaultSpringProps,
+  ...attrs
 }: TProps) {
   const [childrenContainerRef, { height }] = useMeasure();
   const spring = useSpring({
-    height: show ? height : 0,
-    opacity: show ? 1 : 0,
+    height: isOpen ? height : 0,
+    opacity: isOpen ? 1 : 0,
     ...springProps,
   });
 
   return (
     <animated.div className="overflow-hidden" style={spring}>
-      <div ref={childrenContainerRef}>{children}</div>
+      <div {...attrs} ref={childrenContainerRef}>
+        {children}
+      </div>
     </animated.div>
   );
 }
