@@ -5,7 +5,7 @@ import {
   useSpringRef,
   useTransition,
 } from "@react-spring/web";
-import { useDrag, useWheel } from "@use-gesture/react";
+import { useDrag } from "@use-gesture/react";
 import { useState } from "react";
 import cn from "./utils/cn";
 import useMeasure, { RectReadOnly } from "react-use-measure";
@@ -19,7 +19,6 @@ function getResolvedDimensions({ width, height }: RectReadOnly) {
 }
 
 function App() {
-  const [dataArr, setDataArr] = useState(data);
   const [isOpen, setIsOpen] = useState(false);
   const [containerRef, containerDimensions] = useMeasure();
   const resolvedDimensions = getResolvedDimensions(containerDimensions);
@@ -40,7 +39,7 @@ function App() {
   });
 
   const itemsTransApi = useSpringRef();
-  const itemsTrans = useTransition(isOpen ? dataArr : [], {
+  const itemsTrans = useTransition(isOpen ? data : [], {
     ref: itemsTransApi,
     from: { opacity: 0, scale: 0, fontSize: 0 },
     enter: { opacity: 1, scale: 1, fontSize: 16 },
