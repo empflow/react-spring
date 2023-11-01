@@ -1,38 +1,83 @@
-import { animated, useTransition } from "@react-spring/web";
+import {
+  animated,
+  useChain,
+  useSpring,
+  useSpringRef,
+  useTransition,
+} from "@react-spring/web";
+import { useDrag, useWheel } from "@use-gesture/react";
 import { useState } from "react";
-const IMAGES = [
-  "https://fiverr-res.cloudinary.com/images/t_main1,q_auto,f_auto,q_auto,f_auto/gigs/154443660/original/734570cec0de955789ff0acd80caad3d582b85e0/create-a-generative-art-piece-for-you.png",
-  "https://images.squarespace-cdn.com/content/v1/5c77350965a707ed1710a1bc/1592330659753-70M66LGEPXFTQ8S716MX/Generative+Art+by+Mark+Stock+-+Gyre+35700.jpg",
-  "https://cdn.pixabay.com/photo/2018/09/04/09/12/generative-art-3653275_1280.jpg",
-];
+import cn from "./utils/cn";
+import useMeasure, { RectReadOnly } from "react-use-measure";
+import data from "./data";
+
+export const CONTAINER_PADDING_PX = 24;
+
+function getResolvedDimensions({ width, height }: RectReadOnly) {
+  let smallerVal = width > height ? height : width;
+  return smallerVal - CONTAINER_PADDING_PX * 2;
+}
 
 function App() {
-  const [index, setIndex] = useState(0);
-  const transition = useTransition(index, {
-    from: { opacity: 0, filter: "blur(8px)" },
-    enter: { opacity: 1, filter: "blur(0px)" },
-    leave: { opacity: 0, filter: "blur(8px)" },
-    onRest: (_, __, item) => {
-      if (item === IMAGES.length - 1) setIndex(0);
-      else setIndex(item + 1);
-    },
-    config: {
-      duration: 500,
-    },
-    delay: 1000,
-    exitBeforeEnter: true,
+  const [dataArr, setDataArr] = useState(data);
+  const [isOpen, setIsOpen] = useState(false);
+  const [containerRef, containerDimensions] = useMeasure();
+  const resolvedDimensions = getResolvedDimensions(containerDimensions);
+
+  const containerSpringApi = useSpringRef();
+  const containerSpring = useSpring({
+    ref: containerSpringApi,
+    x: 0,
+    y: 0,
+    width: isOpen ? resolvedDimensions : 100,
+    height: isOpen ? resolvedDimensions : 100,
+    background: isOpen ? "blue" : "orange",
   });
 
+  const bindDrag = useDrag(({ movement: [x, y], pressed }) => {
+    if (pressed) containerSpringApi.start({ x, y, immediate: true });
+    else containerSpringApi.start({ x: 0, y: 0 });
+  });
+
+  const itemsTransApi = useSpringRef();
+  const itemsTrans = useTransition(isOpen ? dataArr : [], {
+    ref: itemsTransApi,
+    from: { opacity: 0, scale: 0, fontSize: 0 },
+    enter: { opacity: 1, scale: 1, fontSize: 16 },
+    leave: { opacity: 0, scale: 0, fontSize: 0 },
+    trail: 100 / data.length,
+  });
+
+  useChain(
+    isOpen
+      ? [containerSpringApi, itemsTransApi]
+      : [itemsTransApi, containerSpringApi],
+    isOpen ? [0, 0] : [0, 0]
+  );
+
   return (
-    <main className="min-h-screen flex justify-center items-center">
-      {transition((style, item) => {
-        const src = IMAGES[item];
-        return (
-          <animated.div style={style} className="w-[80vw]">
-            <img className="w-full rounded h-full aspect-video" src={src} />
+    <main
+      ref={containerRef}
+      className={cn(
+        `min-h-screen overflow-hidden w-full flex justify-center items-center`
+      )}
+      style={{ padding: CONTAINER_PADDING_PX }}
+    >
+      <animated.div
+        {...bindDrag()}
+        style={containerSpring}
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="grid grid-flow-dense grid-cols-5 gap-2 p-2 rounded place-content-start touch-none select-none will-change-[width,height,background,transform]"
+      >
+        {itemsTrans((style, item) => (
+          <animated.div
+            className="flex p-1 text-center justify-center w-full items-center rounded aspect-square will-change-[scale,opacity,font-size]"
+            style={{ ...style, background: item.css }}
+          >
+            {item.name}
           </animated.div>
-        );
-      })}
+        ))}
+      </animated.div>
     </main>
   );
 }
