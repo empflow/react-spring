@@ -1,12 +1,11 @@
 import {
   AnimatedProps,
   animated,
-  config,
   easings,
   useSpring,
   useSpringRef,
 } from "@react-spring/web";
-import { CSSProperties, useEffect, useState } from "react";
+import { CSSProperties, useEffect } from "react";
 import cn from "./utils/cn";
 
 interface TProps {
@@ -23,7 +22,7 @@ function Square({ style, toggleSquares }: AnimatedProps<TProps>) {
     loop: {
       reverse: true,
     },
-    config: { easing: easings.easeInOutQuad, duration: 105 },
+    config: { easing: easings.easeInOutQuad, duration: 100 },
   });
 
   useEffect(() => {
