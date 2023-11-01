@@ -41,12 +41,17 @@ function App() {
     background: isOpen ? "blue" : "orange",
   });
 
-  const bindDrag = useDrag(({ movement: [x, y], pressed }) => {
-    if (pressed) containerSpringApi.start({ x, y, immediate: true });
+  const bindDrag = useDrag(({ movement: [x, y], dragging }) => {
+    if (dragging) containerSpringApi.start({ x, y, immediate: true });
     else {
       containerSpringApi.start({ x: 0, y: 0 });
+      toggleContainer();
     }
   });
+
+  function toggleContainer() {
+    setIsOpen((prev) => !prev);
+  }
 
   const itemsTransApi = useSpringRef();
   const itemsTrans = useTransition(isOpen ? data : [], {
@@ -79,7 +84,6 @@ function App() {
       <animated.div
         {...bindDrag()}
         style={containerSpring}
-        onClick={() => setIsOpen((prev) => !prev)}
         className="grid cursor-grab active:cursor-grabbing grid-flow-dense grid-cols-5 gap-2 p-2 rounded place-content-start touch-none select-none will-change-[width,height,background,transform]"
       >
         {itemsTrans((style, item) => (
