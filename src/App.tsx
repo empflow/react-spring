@@ -6,10 +6,11 @@ import {
   useTransition,
 } from "@react-spring/web";
 import { useDrag } from "@use-gesture/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import cn from "./utils/cn";
 import useMeasure, { RectReadOnly } from "react-use-measure";
 import data from "./data";
+import useIsScreenWidthOverBreakpoint from "./useIsScreenWidthOverBreakpoint";
 
 export const CONTAINER_PADDING_PX = 24;
 
@@ -18,10 +19,17 @@ function getResolvedDimensions({ width, height }: RectReadOnly) {
   return smallerVal - CONTAINER_PADDING_PX * 2;
 }
 
+function getResolvedFontSize(isMobile: boolean) {
+  if (isMobile) return 10;
+  return 16;
+}
+
 function App() {
   const [isOpen, setIsOpen] = useState(false);
   const [containerRef, containerDimensions] = useMeasure();
   const resolvedDimensions = getResolvedDimensions(containerDimensions);
+  const isMobile = !useIsScreenWidthOverBreakpoint("sm");
+  const fontSize = getResolvedFontSize(isMobile);
 
   const containerSpringApi = useSpringRef();
   const containerSpring = useSpring({
@@ -35,17 +43,23 @@ function App() {
 
   const bindDrag = useDrag(({ movement: [x, y], pressed }) => {
     if (pressed) containerSpringApi.start({ x, y, immediate: true });
-    else containerSpringApi.start({ x: 0, y: 0 });
+    else {
+      containerSpringApi.start({ x: 0, y: 0 });
+    }
   });
 
   const itemsTransApi = useSpringRef();
   const itemsTrans = useTransition(isOpen ? data : [], {
     ref: itemsTransApi,
     from: { opacity: 0, scale: 0, fontSize: 0 },
-    enter: { opacity: 1, scale: 1, fontSize: 16 },
+    enter: { opacity: 1, scale: 1, fontSize },
     leave: { opacity: 0, scale: 0, fontSize: 0 },
     trail: 100 / data.length,
   });
+
+  useEffect(() => {
+    itemsTransApi.update({ fontSize });
+  }, [isMobile]);
 
   useChain(
     isOpen
@@ -66,7 +80,7 @@ function App() {
         {...bindDrag()}
         style={containerSpring}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="grid grid-flow-dense grid-cols-5 gap-2 p-2 rounded place-content-start touch-none select-none will-change-[width,height,background,transform]"
+        className="grid cursor-grab active:cursor-grabbing grid-flow-dense grid-cols-5 gap-2 p-2 rounded place-content-start touch-none select-none will-change-[width,height,background,transform]"
       >
         {itemsTrans((style, item) => (
           <animated.div
